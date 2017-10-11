@@ -10,7 +10,26 @@
 	extern typeEnum TYPE;
 %}
 
+/* 
+Explanation of attributes :
+||Attribute_name (attributeType)||
 
+integerValue(int)		: stores the integer(number) in INT_CONSTANT
+instr(int) 				: used for storing the address of the next instruction (used in backpathing ) for token M
+stringValue(char*) 		: stores the string literal  of STRING_LITERALtoken and float value (as a sring) of FLOAT_CONSTANT token
+stat(statement*) 		: stores nextlist for backpatching of non terminls statementss , labeled_Statement , compound statement , selection statement ,
+		iteration statement , jump_statement,block_item , block_item_list
+symp(symbol*) 			: attribute used for storing the pointer to the symbol table entry for IDENTIFIER , direct_declarator ,init_declarator, d  eclarator, constant, initializer, initializer_row_list, initializer_row
+
+exp(expr*) 				: attribute used for storing the other attributes of the expression like the pointer to the symbol table symp (for non conditional expressions ),and attributes like trueList, falseList, nextList  ( for conditional expressions)
+		used for following non terminals : expression, primary_expression ,multiplicative_expression,	additive_expression, shift_expression, relational_expression,equality_expression,and_expression,exclusive_or_expression,inclusive_or_expression,logical_and_expression,logical_or_expression,conditional_expression,assignment_expression,expression_statement
+
+st(symbType) 			: attribute for the poiter to store the type of entity pointed to by the pointer 
+charValue(char*) 		: attribte for storing the character (as char*) for CHAR_CONSTANT
+A (unary)				: Attribute for storing the different attributes like pointer to symbol table entry and inde9x translation for mtrix elements 
+			 				Used in non-terminals postfix_expression,unary_expression,cast_expression
+uop (char)				: for storing the unary operators like '*','&' for unary_operator nonterminal
+*/
 %union {
 	int integerValue;
 	int instr;
@@ -25,6 +44,9 @@
 	unary* A;
 	char uop;	//unary operator
 }
+/*
+ 	Tokens used in the lexer , corresponds to the operator , identifier , punctuators andd keywords
+*/
 %token RIGHT_ASSIGN LEFT_ASSIGN ADD_ASSIGN SUB_ASSIGN MUL_ASSIGN
 %token DIV_ASSIGN MOD_ASSIGN AND_ASSIGN XOR_ASSIGN EQ_ASSIGN OR_ASSIGN RIGHT_OP LEFT_OP DOTCOMMA // DOTCOMMA == transpose operation
 %token INC_OP DEC_OP PTR_OP AND_OP OR_OP LE_OP GE_OP EQ_OP NE_OP
@@ -43,7 +65,7 @@
 
 %start translation_unit
    	
-// Expressions
+// Expressions type declarations 
 %type <A> postfix_expression
 	unary_expression
 	cast_expression
@@ -66,7 +88,15 @@
 
 %type <uop> unary_operator
 %type <symp> constant initializer initializer_row_list initializer_row
+/* 
+	augmentations used in the grammar M , N , check , CST 
 
+	M : used to store the address of the next instruction for further use in backpatching 
+	N : for setting the nextinstr in the nextlist of the expressions where used 
+check : for triggering the flag INIT which will be used for generating specific temp variables during the initialisation statement of the expressions 
+  CST : Used for changing to symbol symbolTable for a function i.e. making the current symbolTable the nested symbol table
+
+*/ 
 %type <instr> M
 %type <instr> check
 %type <exp> N
@@ -83,7 +113,7 @@
 	selection_statement
 
 %%
-primary_expression
+primary_expression  	// assigning the value from the lexer to the primary_expression
 	: IDENTIFIER {
 		string debug = getDebugString("87","IDENTIFIER");
 		//cout<<debug<<endl; //debug
@@ -109,7 +139,7 @@ primary_expression
 	}
 	;
 
-constant
+constant 			// reduce the numerical as well as char constants to expressions and generate and emit the temp variables for that
 	: INT_CONSTANT {
 		$$ = gentemp(_INT, NUMBERTOSTRING($1));
 		string debug = getDebugString("111 "," int constatn");
@@ -127,7 +157,7 @@ constant
 		emit(EQUAL, $$->getname(), *new string($1));
 		}
 		else{
-			string debug = "in float constant else";
+			string debug = getDebugString("160","in float constants else");
 			//cout<<debug<<endl;
 		
 			$$ = new symbol(*new string ($1),_DOUBLE);
@@ -142,7 +172,7 @@ constant
 	}
 	;
 
-postfix_expression
+postfix_expression   
 	: primary_expression  {
 		$$ = new unary ();
 		$$->type = $1->symp->type;
@@ -150,7 +180,7 @@ postfix_expression
 		$$->symp = $1->symp;
 		$$->loc = $$->symp;
 	}
-	| postfix_expression '[' expression ']''[' expression ']' {
+	| postfix_expression '[' expression ']''[' expression ']' {   // rule for reducing matrix element (except the initialising one) , also emits the required quads and temp variables 
 		$$ = new unary();
 		symbol *temp = new symbol("temp");
 		$$->symp = $1->symp;			// copy the base
@@ -163,12 +193,12 @@ postfix_expression
  			string debug  = getDebugString("159",t->getname());
  			//cout<<debug<<endl;
  			symbol* u = gentemp(_INT);
- 			emit(SUB, u->getname(), t->getname(), NUMBERTOSTRING(8));
+ 			emit(SUB, u->getname(), t->getname(), NUMBERTOSTRING(8)); 	// emit the SUB quad 
  			t = gentemp(_INT);
  			emit(MATRIXR,t->name,$1->symp->getname(),NUMBERTOSTRING(4));
  			debug  = getDebugString("159",t->getname());
  			//cout<<debug<<endl;
- 			symbol* v = gentemp(_INT);
+ 			symbol* v = gentemp(_INT); 			// generating the temp variable required 
  			emit(MULTIPLY,v->getname(),u->name, t->getname());
  			t = gentemp(_INT);
  			emit(MULTIPLY, t->getname(), $6->symp->getname(), NUMBERTOSTRING(8));
@@ -186,26 +216,25 @@ postfix_expression
  		else {
 	 		emit(MULTIPLY, $$->loc->getname(), $3->symp->getname(), NUMBERTOSTRING(calSizeOfType($$->type)));
  		}
- 		// Mark that it contains array address and first time computation is done
+ 		// Mark that it contains Matrix address and first time computation is done
 		$$->setcat(_MATRIX);
 		$$->symp->type->cat = _MATRIX;
 	}
-	| postfix_expression '(' ')' {symbol* tempe = new symbol("temp");}
-	| postfix_expression '(' argument_expression_list ')' {
+	| postfix_expression '(' ')' {symbol* tempe = new symbol("temp");}   // 
+	| postfix_expression '(' argument_expression_list ')' {   // rule for emitting quad for function call and generating the temp variable as required
 		$$ = new unary();
 		$$->symp = gentemp($1->type->cat);
 		symbol* tempe = new symbol("temp");
 		emit(CALL, $$->symp->getname(), $1->symp->getname(), tostr($3));
 	}
-	| postfix_expression '.' IDENTIFIER /* Ignored */
-	| postfix_expression PTR_OP IDENTIFIER  /* Ignored */
-	| postfix_expression INC_OP { 
+	| postfix_expression '.' IDENTIFIER {}
+	| postfix_expression PTR_OP IDENTIFIER  {} 
+	| postfix_expression INC_OP {   		// rule for emitting quads for ++ operator based on different cases
 		$$ = new unary();
 
 		if($1->symp->type->cat==_MATRIX){
 			symbol* t = gentemp(_DOUBLE);
-			//derefrencing the  matrix
-			emit(MATRIXR, t->getname(), $1->symp->name, $1->loc->getname());
+			emit(MATRIXR, t->getname(), $1->symp->name, $1->loc->getname()); 			//derefrencing the  matrix
 			string debug  = getDebugString("205",t->getname());
  			//cout<<debug<<endl;
 			symbol* u =  gentemp(_DOUBLE);
@@ -225,13 +254,12 @@ postfix_expression
 			emit (ADD, $1->symp->getname(), $1->symp->getname(), "1");
 		}
 	}
-	| postfix_expression DEC_OP {
+	| postfix_expression DEC_OP {	// rule for emitting quads for -- operator based on different cases
 		$$ = new unary();
 
 		if($1->symp->type->cat==_MATRIX){
 			symbol* t = gentemp(_DOUBLE);
-			//derefrencing the  matrix
-			emit(MATRIXR, t->getname(), $1->symp->getname(), $1->loc->getname());
+			emit(MATRIXR, t->getname(), $1->symp->getname(), $1->loc->getname()); 			//derefrencing the  matrix for accessing the element 
 			string debug  = getDebugString("231",t->getname());
  			//cout<<debug<<endl;
 			emit (SUB, t->name, t->getname(), "1");
@@ -249,15 +277,15 @@ postfix_expression
 			emit (SUB, $1->symp->getname(), $1->symp->getname(), "1");
 		}
 	}
-	| postfix_expression DOTCOMMA {
+	| postfix_expression DOTCOMMA { 				// rule for generating the temp variable for transpose operation of matrix
 		string temp = $1->symp->getname();
 		// for transpose set the flag to true 
 		int row = $1->type->getrows();
 		int col = $1->type->getcols();
 		//cout<<col<<" "<<row;
-		string debug  = getDebugString("254","int DOTCOMMA");
+		string debug  = getDebugString("254","int DOTCOMMA");			// for debugging 
  		//cout<<debug<<endl;
-		$$->symp = gentemp($1->type,"",true);
+		$$->symp = gentemp($1->type,"",true); 			// generating the temp variable with appropriate flags set
 		//$1->type->row = row;
 		//$1->type->col = col;
 		$$->symp->size = row*col*8 + 8;
@@ -269,10 +297,10 @@ postfix_expression
 	;
 
 argument_expression_list
-	: assignment_expression {
+	: assignment_expression { 				// for emitting the quads for the parameter list of the function to be passed 
 		emit (PARAM, $1->symp->name);
 		$$ = 1; symbol* tempe = new symbol("tempVar");}
-	| argument_expression_list ',' assignment_expression {
+	| argument_expression_list ',' assignment_expression {   // for emitting the quads for the parameter of the function to be passed 
 		emit (PARAM, $3->symp->getname());
 		string debug  = getDebugString("273",$3->symp->getname());
  			//cout<<debug<<endl;
@@ -301,12 +329,11 @@ unary_expression
 		// Use the same value
 		$$ = $2;
 	}
-	| DEC_OP unary_expression {
+	| DEC_OP unary_expression {	// for emitting quads for unary expression --(expression) based on the different categories of the unary_expression
 		// Decrement $1
 		if($2->symp->type->cat==_MATRIX){
 			symbol* t = gentemp(_DOUBLE);
-			//derefrencing the  matrix
-			emit(MATRIXR, t->getname(), $2->symp->getname(), $2->loc->getname());
+			emit(MATRIXR, t->getname(), $2->symp->getname(), $2->loc->getname()); // 	//derefrencing the  matrix
 			emit (SUB, t->getname(), t->getname(), "1");
 			emit(MATRIXL, $2->symp->getname(),$2->loc->getname(),t->getname());
 		}
@@ -367,14 +394,14 @@ cast_expression
 		$$ = $1;
 	}
 	;
-multiplicative_expression
+multiplicative_expression 		
 	: cast_expression {
-		// Now the cast expression can't go to LHS of assignment_expression
-		// So we can safely store the rvalues of pointer and arrays in temporary
+	// Now the cast expression can't go to LHS of assignment_expression
+		// So we can safely store the rvalues of pointer and Matrices in temporary
 		// We don't need to carry lvalues anymore
 		$$ = new expr();
-		if ($1->cat==_MATRIX) { // MATRIX
-			if(!TRANSPOSE && $1->type->cat!=_INT){
+		if ($1->cat==_MATRIX) { 							//  case for MATRIX Type
+			if(!TRANSPOSE && $1->type->cat!=_INT){  		// diferent cases depending on the various matrix operation 
 				//cout<<"343"<<endl;
 				symbType *ts=new symbType($1->getcat(),NULL,0);
 				ts->setrows($1->symp->type->row);
@@ -405,17 +432,25 @@ multiplicative_expression
 		}
 	}
 	| multiplicative_expression '*' cast_expression {
-		if (typecheck ($1->symp, $3->symp) ) {
+		if (typecheck ($1->symp, $3->symp) ) { 			// calling typecheck to check the compatibility and conversion of the cat. of the symbols
 			symbol *tempe = new symbol("tempVar"); tempe->name = "tempVar";
 			$$ = new expr();
-			$$->symp = gentemp($1->symp->type->cat);
 			string debug  = getDebugString("406","mult*cast");//cout<<debug<<endl;
+			if($1->symp->type->cat == _MATRIX){
+				$$->symp = gentemp(_MATRIX);
+				$$->symp->type->setcols($3->symp->type->getcols());
+				$$->symp->type->setrows($1->symp->type->row);
+				$$->symp->size = $$->symp->type->getcols()*$$->symp->type->getrows()*8 + 8;
+			}
+			else{
+				$$->symp = gentemp($1->symp->type->cat);
+			}
 			emit (MULTIPLY, $$->symp->getname(), $1->symp->getname(), $3->symp->getname());
 		}
 		else cout << "Type Error"<< endl;
 	}
 	| multiplicative_expression '/' cast_expression{
-		if (typecheck ($1->symp, $3->symp) ) {
+		if (typecheck ($1->symp, $3->symp) ) {		// calling typecheck to check the compatibility and conversion of the cat. of the symbols
 			symbol* tempe = new symbol("tempVar");
 			$$ = new expr();
 			$$->symp = gentemp($1->symp->type->cat);
@@ -426,8 +461,8 @@ multiplicative_expression
 		else cout << "Type Error"<< endl;
 	}
 	| multiplicative_expression '%' cast_expression {
-		if (typecheck ($1->symp, $3->symp) ) {
-			symbol* tempe = new symbol("tempVar");
+		if (typecheck ($1->symp, $3->symp) ) {		// calling typecheck to check the compatibility and conversion of the cat. of the symbols
+			symbol* tempe = new symbol("tempVar");  
 			$$ = new expr();
 			$$->symp = gentemp($1->symp->type->cat);
 			emit (MODOP, $$->symp->getname(), $1->symp->getname(), $3->symp->getname());
@@ -438,7 +473,7 @@ multiplicative_expression
 additive_expression
 	: multiplicative_expression {$$ = $1;}
 	| additive_expression '+' multiplicative_expression {
-		if (typecheck($1->symp, $3->symp)) {
+		if (typecheck($1->symp, $3->symp)) {		// calling typecheck to check the compatibility and conversion of the cat. of the symbols
 			$$ = new expr();
 			symbol* tempe = new symbol("tempVar");
 			$$->symp = gentemp($1->symp->type->cat);
@@ -449,11 +484,11 @@ additive_expression
 		else cout << "Type Error"<< endl;
 	}
 	| additive_expression '-' multiplicative_expression {
-		if (typecheck($1->symp, $3->symp)) {
+		if (typecheck($1->symp, $3->symp)) {		// calling typecheck to check the compatibility and conversion of the cat. of the symbols
 			$$ = new expr();
 			symbol* tempe = new symbol("tempVar");
 			$$->symp = gentemp($1->symp->type->cat);
-			string debug  = getDebugString("448");
+			string debug  = getDebugString("448");	// for debugging
  			//cout<<debug<<endl;
 			emit (SUB, $$->symp->getname(), $1->symp->getname(), $3->symp->getname());
 		}
@@ -465,7 +500,7 @@ shift_expression
 	| shift_expression LEFT_OP additive_expression {
 		if ($3->symp->type->cat == _INT) {
 			symbol* tempe = new symbol("tempVar");
-			$$ = new expr();
+			$$ = new expr();					// generating a new temp variable to to store the value generated after completion of operation
 			$$->symp = gentemp (_INT);
 			string debug  = getDebugString("462","in LEFTOP");
  					//cout<<debug<<endl;
@@ -476,12 +511,12 @@ shift_expression
 	| shift_expression RIGHT_OP additive_expression {
 		if ($3->symp->type->cat == _INT) {
 			$$ = new expr();
-			$$->symp = gentemp (_INT);
+			$$->symp = gentemp (_INT);					// generating a new temp variable to to store the value generated after completion of operation
 			string debug  = getDebugString("472");
  					//cout<<debug<<endl;
 			emit (RIGHT_SHIFT_OP, $$->symp->getname(), $1->symp->getname(), $3->symp->getname());
 		}
-		else cout << "Type Error"<< endl;
+		else cout << "Type Error"<< endl;			// if the category is not int it gives a type error
 	}
 	;
 
@@ -489,15 +524,14 @@ relational_expression
 	: shift_expression { $$ = $1; symbol *tempe = new symbol("tempVar");}
 	| relational_expression '<' shift_expression {
 		symbol *tempe = new symbol("tempVar");
-	// check here if its of type _matrix if yes then do MATRIXR
-		if (typecheck ($1->symp, $3->symp) ) {
+		if (typecheck ($1->symp, $3->symp) ) { 		/// calling typecheck to check the compatibility and conversion of the cat. of the symbols
 			// New bool
 			$$ = new expr();
 			$$->setisbool(1);
 			symbol* tempe = new symbol("tempVar");
-			string debug  = getDebugString("490");
+			string debug  = getDebugString("532");
  			//cout<<debug<<endl; 
-			$$->settrueList(makeList (nextinstr()));
+			$$->settrueList(makeList (nextinstr())); 	// update the truleist an falseList of the expressions with the address of the nextinstr()
 			$$->setfalseList(makeList (nextinstr()+1));
 			emit(LT, "", $1->symp->getname(), $3->symp->getname());
 			tempe = new symbol("tempVar");
@@ -505,15 +539,15 @@ relational_expression
 		else cout << "Type Error"<< endl;
 	}
 	| relational_expression '>' shift_expression {
-		if (typecheck ($1->symp, $3->symp) ) {
-			// New bool
+		if (typecheck ($1->symp, $3->symp) ) { 		//// calling typecheck to check the compatibility and conversion of the cat. of the symbols
+			// New bool expression
 			$$ = new expr();
 			$$->setisbool(1);
 			symbol* tempe = new symbol("tempVar");
 			tempe->getname() = "temp"; 
-			string debug  = getDebugString("506");
+			string debug  = getDebugString("548");
  					//cout<<debug<<endl;
-			$$->settrueList(makeList (nextinstr()));
+			$$->settrueList(makeList (nextinstr())); 		// update the truleist an falseList of the expressions with the address of the nextinstr()
 			$$->falseList = makeList (nextinstr()+1);
 			emit(GREATER_THAN, "", $1->symp->getname(), $3->symp->getname());
 			emit (GOTOOP, "");
@@ -521,17 +555,17 @@ relational_expression
 		else cout << "Type Error"<< endl;
 	}
 	| relational_expression LE_OP shift_expression {
-		if (typecheck ($1->symp, $3->symp) ) {
-			// New bool
+		if (typecheck ($1->symp, $3->symp) ) {	// calling typecheck to check the compatibility and conversion of the cat. of the symbols
+			// New bool expression
 			$$ = new expr();
 			$$->setisbool(1);
 
-			$$->settrueList(makeList (nextinstr()));
+			$$->settrueList(makeList (nextinstr())); // update the truelist of the expressions with the address of the nextinstr()
 			symbol* tempe = new symbol("tempVar");
-			string debug  = getDebugString("523");
+			string debug  = getDebugString("565","LE_OP relational");
  					//cout<<debug<<endl;
 			tempe->getname() = "temp"; 
-			$$->setfalseList(makeList (nextinstr()+1));
+			$$->setfalseList(makeList (nextinstr()+1)); // update the falselist of the expressions with the address of the nextinstr()
 			emit(LE, "", $1->symp->getname(), $3->symp->getname());
 			emit (GOTOOP, "");
 		}
@@ -544,8 +578,8 @@ relational_expression
 			$$->setisbool(1);
 			symbol* tempe = new symbol("tempVar");
 			tempe->getname() = "temp"; 
-			$$->settrueList(makeList (nextinstr()));
-			$$->setfalseList(makeList (nextinstr()+1));
+			$$->settrueList(makeList (nextinstr())); // update the truelist of the expressions with the address of the nextinstr()
+			$$->setfalseList(makeList (nextinstr()+1)); // update the falselist of the expressions with the address of the nextinstr()
 			string debug  = getDebugString("541","GE_OP");
  					//cout<<debug<<endl;
 			emit(GREATER_THAN_EQUAL, "", $1->symp->getname(), $3->symp->getname());
