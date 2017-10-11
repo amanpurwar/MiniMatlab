@@ -1,0 +1,148 @@
+t45########################################################################################################################
+Symbol Table : Global                                         Parent: null
+------------------------------------------------------------------------------------------------------------------------
+Name            Type                            Category    Init Val                        Size    Offset  Nest
+------------------------------------------------------------------------------------------------------------------------
+test            int                             local       1                               4       0       null
+t00             int                             temp        1                               4       4       null
+main            int                             function                                    4       8       main
+------------------------------------------------------------------------------------------------------------------------
+
+########################################################################################################################
+Symbol Table : main                                           Parent: Global
+------------------------------------------------------------------------------------------------------------------------
+Name            Type                            Category    Init Val                        Size    Offset  Nest
+------------------------------------------------------------------------------------------------------------------------
+retVal          int                             local                                       4       0       null
+a               Matrix(2,2,double)              local       {1.2,2.3;3.2,3.4}               40      4       null
+t00             int                             temp        1                               4       44      null
+b               int                             local       2                               4       48      null
+t01             int                             temp        2                               4       52      null
+c               int                             local                                       4       56      null
+t02             int                             temp                                        4       60      null
+t03             int                             temp                                        4       64      null
+t04             int                             temp                                        4       68      null
+t05             int                             temp                                        4       72      null
+t06             int                             temp        2                               4       76      null
+t07             int                             temp                                        4       80      null
+t08             int                             temp                                        4       84      null
+t09             int                             temp                                        4       88      null
+t10             int                             temp                                        4       92      null
+t11             int                             temp                                        4       96      null
+d               double                          local                                       8       100     null
+t12             double                          temp                                        8       108     null
+t13             double                          temp                                        8       116     null
+t14             double                          temp                                        8       124     null
+t15             int                             temp                                        4       132     null
+t16             int                             temp                                        4       136     null
+t17             int                             temp                                        4       140     null
+check           int                             local                                       4       144     null
+t18             int                             temp                                        4       148     null
+t19             int                             temp                                        4       152     null
+t20             int                             temp                                        4       156     null
+t21             int                             temp                                        4       160     null
+t22             int                             temp                                        4       164     null
+t23             int                             temp                                        4       168     null
+t24             int                             temp                                        4       172     null
+t25             int                             temp                                        4       176     null
+i               int                             local                                       4       180     null
+t26             int                             temp                                        4       184     null
+t27             int                             temp                                        4       188     null
+t28             int                             temp                                        4       192     null
+t29             int                             temp                                        4       196     null
+m               Matrix(2,3,double)              local                                       56      200     null
+t30             int                             temp        2                               4       256     null
+t31             int                             temp        3                               4       260     null
+n               Matrix(2,3,double)              local                                       56      264     null
+t32             int                             temp        2                               4       320     null
+t33             int                             temp        3                               4       324     null
+p               Matrix(3,2,double)              local                                       56      328     null
+t34             int                             temp        3                               4       384     null
+t35             int                             temp        2                               4       388     null
+q               Matrix(2,2,double)              local                                       40      392     null
+t36             int                             temp        2                               4       432     null
+t37             int                             temp        2                               4       436     null
+t38             int                             temp        2                               4       440     null
+t39             int                             temp        2                               4       444     null
+t40             Matrix(2,2,double)              temp        {1.2,2.3;3.2,3.4}               40      448     null
+t41             Matrix(2,3,double)              temp                                        56      488     null
+t42             Matrix(2,3,double)              temp                                        56      544     null
+t43             Matrix(3,2,double)              temp                                        56      600     null
+t44             Matrix(2,3,double)              temp                                        56      656     null
+t45             Matrix(2,2,double)              temp                                        40      712     null
+t46             Matrix(2,2,double)              temp                                        40      752     null
+t47             Matrix(2,2,double)              temp                                        40      792     null
+------------------------------------------------------------------------------------------------------------------------
+
+##############################
+Quad Translation
+------------------------------
+	0   :	t00 = 1
+	1   :	test = t00
+
+main: 
+
+	3   :	t00 = 1
+	4   :	a = t00
+	5   :	t01 = 2
+	6   :	b = t01
+	7   :	t03 = a + b
+	8   :	c = t03
+	9   :	t05 = a
+	10  :	a = a + 1
+	11  :	t06 = 2
+	12  :	t07 = a >> t06
+	13  :	a = t07
+	14  :	t10 = a / b
+	15  :	b = t10
+	16  :	t12 = int2double(a)
+	17  :	t13 = t12 + d
+	18  :	d = t13
+	19  :	if b > a goto 22
+	20  :	goto 23
+	21  :	goto 27
+	22  :	goto 25
+	23  :	t16 = a
+	24  :	goto 27
+	25  :	t16 = b
+	26  :	goto 27
+	27  :	a = t16
+	28  :	t19 = b * c
+	29  :	t21 = a + t19
+	30  :	check = t21
+	31  :	if check < c goto 34
+	32  :	goto 37
+	33  :	goto 
+	34  :	t24 = a | b
+	35  :	c = t24
+	36  :	goto 37
+	37  :	a = a + 1
+	38  :	t26 = b
+	39  :	b = b + 1
+	40  :	t28 = a + t26
+	41  :	i = t28
+	42  :	t30 = 2
+	43  :	t31 = 3
+	44  :	t32 = 2
+	45  :	t33 = 3
+	46  :	t34 = 3
+	47  :	t35 = 2
+	48  :	t36 = 2
+	49  :	t37 = 2
+	50  :	t38 = 2
+	51  :	t39 = 2
+	52  :	a = t40
+	53  :	t41 = m
+	54  :	t42 = n
+	55  :	t42 = t41 + t42
+	56  :	m = t42
+	57  :	t43 = n.'
+	58  :	p = t43
+	59  :	t44 = m
+	60  :	t45 = t44 * p
+	61  :	q = t45
+	62  :	t46 = q
+	63  :	t47 = a
+	64  :	t47 = t46 - t47
+	65  :	q = t47
+------------------------------

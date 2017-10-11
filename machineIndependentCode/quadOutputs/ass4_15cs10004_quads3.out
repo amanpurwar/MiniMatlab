@@ -1,0 +1,101 @@
+########################################################################################################################
+Symbol Table : Global                                         Parent: null
+------------------------------------------------------------------------------------------------------------------------
+Name            Type                            Category    Init Val                        Size    Offset  Nest
+------------------------------------------------------------------------------------------------------------------------
+test            int                             local       4                               4       0       null
+t00             int                             temp        4                               4       4       null
+fibonacci       int                             function                                    4       8       fibonacci
+main            void                            function                                    0       12      main
+------------------------------------------------------------------------------------------------------------------------
+
+########################################################################################################################
+Symbol Table : fibonacci                                      Parent: Global
+------------------------------------------------------------------------------------------------------------------------
+Name            Type                            Category    Init Val                        Size    Offset  Nest
+------------------------------------------------------------------------------------------------------------------------
+n               int                             param                                       4       0       null
+retVal          int                             local                                       4       4       null
+term1           int                             local                                       4       8       null
+term2           int                             local                                       4       12      null
+sum             int                             local                                       4       16      null
+t00             int                             temp        0                               4       20      null
+t01             int                             temp                                        4       24      null
+t02             int                             temp        0                               4       28      null
+t03             int                             temp        1                               4       32      null
+t04             int                             temp                                        4       36      null
+t05             int                             temp        1                               4       40      null
+fibonacci       int                             local                                       4       44      null
+t06             int                             temp        1                               4       48      null
+t07             int                             temp                                        4       52      null
+t08             int                             temp                                        4       56      null
+t09             int                             temp                                        4       60      null
+t10             int                             temp                                        4       64      null
+t11             int                             temp        2                               4       68      null
+t12             int                             temp                                        4       72      null
+t13             int                             temp                                        4       76      null
+t14             int                             temp                                        4       80      null
+t15             int                             temp                                        4       84      null
+t16             int                             temp                                        4       88      null
+t17             int                             temp                                        4       92      null
+t18             int                             temp                                        4       96      null
+------------------------------------------------------------------------------------------------------------------------
+
+########################################################################################################################
+Symbol Table : main                                           Parent: Global
+------------------------------------------------------------------------------------------------------------------------
+Name            Type                            Category    Init Val                        Size    Offset  Nest
+------------------------------------------------------------------------------------------------------------------------
+n               int                             local       4                               4       0       null
+t00             int                             temp        4                               4       4       null
+fib             int                             local                                       4       8       null
+fibonacci       int                             local                                       4       12      null
+t01             int                             temp                                        4       16      null
+t02             int                             temp                                        4       20      null
+------------------------------------------------------------------------------------------------------------------------
+
+##############################
+Quad Translation
+------------------------------
+	0   :	t00 = 4
+	1   :	test = t00
+
+fibonacci: 
+
+	3   :	t00 = 0
+	4   :	if n == t00 goto 7
+	5   :	goto 10
+	6   :	goto 
+	7   :	t02 = 0
+	8   :	ret t02
+	9   :	goto 10
+	10  :	t03 = 1
+	11  :	if n == t03 goto 14
+	12  :	goto 17
+	13  :	goto 
+	14  :	t05 = 1
+	15  :	ret t05
+	16  :	goto 17
+	17  :	t06 = 1
+	18  :	t08 = n - t06
+	19  :	param t08
+	20  :	t09 = call fibonacci, 1
+	21  :	term1 = t09
+	22  :	t11 = 2
+	23  :	t13 = n - t11
+	24  :	param t13
+	25  :	t14 = call fibonacci, 1
+	26  :	term2 = t14
+	27  :	t17 = term1 + term2
+	28  :	sum = t17
+	29  :	ret sum
+
+main: 
+
+	31  :	t00 = 4
+	32  :	n = t00
+	33  :	param n
+	34  :	t01 = call fibonacci, 1
+	35  :	fib = t01
+	36  :	ret 
+------------------------------
