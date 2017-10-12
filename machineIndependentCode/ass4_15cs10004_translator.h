@@ -29,19 +29,41 @@ _VOID, _CHAR, _INT, _DOUBLE, PTR, ARR, FUNC, _MATRIX};
 enum opTypeEnum { 
 EQUAL, 
 // Relational Operators 
-LT, GREATER_THAN, LE, GREATER_THAN_EQUAL, EQOP, NEOP,GOTOOP, _RETURN,
+LT, 
+GREATER_THAN, 
+EQOP, 
+NEOP,
+LE,
+GREATER_THAN_EQUAL, 
+GOTOOP, 
+_RETURN,
 // Arithmatic Operators
-ADD, SUB, MULTIPLY, DIVIDE, RIGHT_SHIFT_OP, LEFTOP, MODOP,
+ADD, LEFTOP, 
+MULTIPLY,
+MODOP,
+SUB,   
+RIGHT_SHIFT_OP,
+DIVIDE,
 // Unary Operators
-UNARY_MINUS, UPLUS, ADDRESS, RIGHT_POINTER, B_NOT, LNOT,
+UNARY_MINUS, 
+B_NOT, 
+UPLUS, 
+RIGHT_POINTER, 
+ADDRESS,LNOT,
 // Bit Operators
-BAND, XOR, INOR,
+INOR,
+BAND, 
+XOR, 
+// MATRIX Assign
+MATRIXR, 
+MATRIXL,
 // PTR Assign
-PTRL, PTRR,
-// ARR Assign
-MATRIXR, MATRIXL,
+PTRL, 
+PTRR,
 // Function call
-PARAM, CALL, LABEL,
+CALL,
+LABEL,
+PARAM,
 // Transpose
 _DOTCOMMA
 };
@@ -166,7 +188,7 @@ public:
 
 void backpatch (vector<int>, int); 					// backpatch list with the addr int
 void emit(opTypeEnum opL, string result, string arg1="", string arg2 = ""); 		// emit the quads and push it in the quad array
-int emit(opTypeEnum op, string result, int arg1, int arg2 = 0); 					// overloaded emit function
+//int emit(opTypeEnum op, string result, int arg1, int arg2 = 0); 					// overloaded emit function
 void emit(opTypeEnum op, string result, int arg1, string arg2 = ""); 				// overloaded emit function 
 
 
@@ -210,7 +232,7 @@ public:
 	// Valid for bool type
 public:
 	vector<int> trueList;									// TrueList attribute for the boolean
-	vector<int> falseList;									// TrueList attribute for the boolean
+	vector<int> falseList;									// falselist attribute for the boolean
 	vector<int> nextList;  									// nextList attribute for the boolean
 public: 													// getter and setter for variables 
 	void setnextList(vector<int> nextList);
