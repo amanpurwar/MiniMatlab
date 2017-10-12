@@ -366,7 +366,15 @@ unary_expression
 				$$ = $2;
 				break;
 			case '-':
+				if($2->symp->type->cat==_MATRIX){
+					$$->symp = gentemp($2->symp->type,"",false,true);
+					$$->symp->type->setrows($2->symp->type->getrows());
+					$$->symp->type->setcols($2->symp->type->getcols());
+					$$->symp->size = 8*($2->symp->type->getrows()*$2->symp->type->getcols())+8;
+				}
+				else{
 				$$->symp = gentemp($2->symp->type->cat);
+				}
 				emit (UNARY_MINUS, $$->symp->getname(), $2->symp->getname());
 				break;
 			default:
@@ -438,7 +446,7 @@ multiplicative_expression
 			string debug  = getDebugString("406","mult*cast");//cout<<debug<<endl;
 			if($1->symp->type->cat == _MATRIX && $3->symp->type->cat == _MATRIX){
 				$$->symp = gentemp($1->symp->type,"",false,true);
-				cout<<$$->symp->name;
+				//cout<<$$->symp->name;
 				$$->symp->type->setcols($3->symp->type->getcols());
 				$$->symp->type->setrows($1->symp->type->row);
 				$$->symp->size = $$->symp->type->getcols()*$$->symp->type->getrows()*8 + 8;
@@ -446,7 +454,7 @@ multiplicative_expression
 			else{
 				if($1->symp->type->cat == _MATRIX && $3->symp->type->cat != _MATRIX){
 					$$->symp = gentemp($1->symp->type,"",false,true);
-					cout<<$$->symp->name;
+					//cout<<$$->symp->name;
 					$$->symp->type->setcols($1->symp->type->getcols());
 					$$->symp->type->setrows($1->symp->type->row);
 					$$->symp->size = $$->symp->type->getcols()*$$->symp->type->getrows()*8 + 8;
@@ -454,7 +462,7 @@ multiplicative_expression
 				else{
 					if($1->symp->type->cat != _MATRIX && $3->symp->type->cat == _MATRIX){
 						$$->symp = gentemp($3->symp->type,"",false,true);
-						cout<<$$->symp->name;
+						//cout<<$$->symp->name;
 						$$->symp->type->setcols($3->symp->type->getcols());
 						$$->symp->type->setrows($3->symp->type->row);
 						$$->symp->size = $$->symp->type->getcols()*$$->symp->type->getrows()*8 + 8;
@@ -499,7 +507,37 @@ additive_expression
 		if (typecheck($1->symp, $3->symp)) {		// calling typecheck to check the compatibility and conversion of the cat. of the symbols
 			$$ = new expr();
 			symbol* tempe = new symbol("tempVar");
-			$$->symp = gentemp($1->symp->type->cat);
+			int row,col;
+
+         if ($1->symp->type->cat!=_MATRIX && $3->symp->type->cat==_MATRIX) // check for matrix case if there is matrix generate temp accd to that
+        {
+          symbType *t=new symbType($3->symp->type->cat,NULL,0);
+          row=$3->symp->type->getrows();
+          col=$3->symp->type->getcols();
+          $$->symp = gentemp(t,"",false,true);
+        }
+        else if ($1->symp->type->cat==_MATRIX && $3->symp->type->cat!=_MATRIX)
+        {
+          symbType *t=new symbType($1->symp->type->cat,NULL,0);
+          row=$1->symp->type->row;
+          col=$1->symp->type->col;
+          $$->symp = gentemp(t,"",false,true);
+        }
+        else
+			       $$->symp=gentemp($1->symp->type->cat);
+
+		 if ($1->symp->type->cat==_MATRIX && $3->symp->type->cat!=_MATRIX)
+        {
+          $$->symp->type->setrows(row);
+          $$->symp->type->setcols(col);
+          $$->symp->size = row*col*8 + 8;
+        }
+        else if($1->symp->type->cat!=_MATRIX && $3->symp->type->cat==_MATRIX)
+        {
+          $$->symp->type->setrows(row);
+          $$->symp->type->setcols(col);
+          $$->symp->size = row*col*8 + 8;
+        }
 			string debug  = getDebugString("482","additive + mult");
  			//cout<<debug<<endl;
 			emit (ADD, $$->symp->getname(), $1->symp->getname(), $3->symp->getname());
@@ -510,8 +548,34 @@ additive_expression
 		if (typecheck($1->symp, $3->symp)) {		// calling typecheck to check the compatibility and conversion of the cat. of the symbols
 			$$ = new expr();
 			symbol* tempe = new symbol("tempVar");
-			$$->symp = gentemp($1->symp->type->cat);
-			string debug  = getDebugString("493");	// for debugging
+			int row,col;
+
+         if ($1->symp->type->cat!=_MATRIX && $3->symp->type->cat==_MATRIX){  // check for matrix case if there is matrix generate temp accd to that
+          symbType *t=new symbType($3->symp->type->cat,NULL,0);
+          row=$3->symp->type->getrows();
+          col=$3->symp->type->getcols();
+          $$->symp = gentemp(t,"",false,true);
+        }
+        else if ($1->symp->type->cat==_MATRIX && $3->symp->type->cat!=_MATRIX){
+          symbType *t=new symbType($1->symp->type->cat,NULL,0);
+          row=$1->symp->type->row;
+          col=$1->symp->type->col;
+          $$->symp = gentemp(t,"",false,true);
+        }
+        else
+			       $$->symp=gentemp($1->symp->type->cat);
+
+		 if ($1->symp->type->cat==_MATRIX && $3->symp->type->cat!=_MATRIX){
+          $$->symp->type->setrows(row);
+          $$->symp->type->setcols(col);
+          $$->symp->size = row*col*8 + 8;
+        }
+        else if($1->symp->type->cat!=_MATRIX && $3->symp->type->cat==_MATRIX){
+          $$->symp->type->setrows(row);
+          $$->symp->type->setcols(col);
+          $$->symp->size = row*col*8 + 8;
+        }
+			string debug  = getDebugString("582");	// for debugging
  			//cout<<debug<<endl;
 			emit (SUB, $$->symp->getname(), $1->symp->getname(), $3->symp->getname());
 		}
@@ -628,7 +692,7 @@ equality_expression
 			$$->settrueList(makeList (nextinstr())); // update the truelist of the expressions with the address of the nextinstr()
 			$$->setfalseList(makeList (nextinstr()+1)); // update the falselist of the expressions with the address of the nextinstr()
 			emit (EQOP, "", $1->symp->getname(), $3->symp->getname());
-			emit (GOTOOP, "");
+			emit (GOTOOP, ""); // emit the GOTO which will be later backpatched 
 		}
 		else cout << "Type Error"<< endl;
 	}
@@ -646,7 +710,7 @@ equality_expression
 			$$->falseList = makeList (nextinstr()+1); // update the falselist of the expressions with the address of the nextinstr()
 			symbol* tempe = new symbol("tempVar");
 			tempe->name = "temp"; 
-			emit (NEOP, $$->symp->getname(), $1->symp->getname(), $3->symp->getname());
+			emit (NEOP,"", $1->symp->getname(), $3->symp->getname());
 			emit (GOTOOP, ""); // emit the goto quad which will be backpatched later
 		}
 		else cout << "Type Error"<< endl;
@@ -680,7 +744,7 @@ exclusive_or_expression
 			$$ = new expr();
 			symbol* temp = new symbol("tempVar");
 			$$->setisbool(0);
-			debug  = getDebugString("660");
+			debug  = getDebugString("683");
  					//cout<<debug<<endl;
 			$$->symp = gentemp (_INT);
 			emit (XOR, $$->symp->getname(), $1->symp->getname(), $3->symp->getname());
@@ -697,7 +761,7 @@ inclusive_or_expression
 			symbol* temp = new symbol("tempVar");
 			convertFromBoolean ($1);
 			convertFromBoolean ($3);
-			string debug  = getDebugString("677","OR opn");
+			string debug  = getDebugString("700","OR opn");
  					//cout<<debug<<endl;
 			$$ = new expr();
 			$$->setisbool(0);
@@ -721,7 +785,7 @@ logical_and_expression
 		$$ = new expr();	// declaring a boolean expression 
 		$$->setisbool(1);	// as it is a boolean expr setting is bool to true
 		backpatch($1->gettrueList(), $4);
-		string debug  = getDebugString("701");
+		string debug  = getDebugString("724");
  					//cout<<debug<<endl;
 		$$->settrueList($5->gettrueList());		// updating the truelist and falselist with the instr of the RHS expressions rule 
 		$$->setfalseList(merge ($1->falseList, $5->falseList)); }
@@ -739,7 +803,7 @@ logical_or_expression
 
 		$$ = new expr();
 		$$->setisbool(1);
-		string debug  = getDebugString("719","logical Or ");
+		string debug  = getDebugString("742","logical Or ");
  					//cout<<debug<<endl;
 		backpatch ($$->falseList, $4);
 		$$->settrueList(merge ($1->trueList, $5->trueList));// updating the truelist and falselist with the instr of the RHS expressions rule 
