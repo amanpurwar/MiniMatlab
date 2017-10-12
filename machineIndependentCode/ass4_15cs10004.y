@@ -444,7 +444,27 @@ multiplicative_expression
 				$$->symp->size = $$->symp->type->getcols()*$$->symp->type->getrows()*8 + 8;
 			}
 			else{
-				$$->symp = gentemp($1->symp->type->cat);
+				if($1->symp->type->cat == _MATRIX && $3->symp->type->cat != _MATRIX){
+					$$->symp = gentemp($1->symp->type,"",false,true);
+					cout<<$$->symp->name;
+					$$->symp->type->setcols($1->symp->type->getcols());
+					$$->symp->type->setrows($1->symp->type->row);
+					$$->symp->size = $$->symp->type->getcols()*$$->symp->type->getrows()*8 + 8;
+				}
+				else{
+					if($1->symp->type->cat != _MATRIX && $3->symp->type->cat == _MATRIX){
+						$$->symp = gentemp($3->symp->type,"",false,true);
+						cout<<$$->symp->name;
+						$$->symp->type->setcols($3->symp->type->getcols());
+						$$->symp->type->setrows($3->symp->type->row);
+						$$->symp->size = $$->symp->type->getcols()*$$->symp->type->getrows()*8 + 8;
+				
+					}
+					else{
+					$$->symp = gentemp($1->symp->type->cat);
+					}
+				
+				}
 			}
 			emit (MULTIPLY, $$->symp->getname(), $1->symp->getname(), $3->symp->getname());
 		}
