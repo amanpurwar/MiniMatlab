@@ -436,6 +436,7 @@ multiplicative_expression
 			symbol* tempe = $$->symp;;
 		}
 		else { // otherwise
+			cout<<"439"<<endl;
 			$$->symp = $1->symp;
 		}
 	}
@@ -606,8 +607,15 @@ shift_expression
 		else cout << "Type Error"<< endl;			// if the category is not int it gives a type error
 	}
 	;
+/*
+for B -> E1 rel E2 
+B.truelist = makelist(nextinstr)
+B.falselist = maklist(nextinstr)
+emit(op,"",name,name)
+emit(GOTOOP)
 
-relational_expression
+*/
+relational_expression			
 	: shift_expression { $$ = $1; symbol *tempe = new symbol("tempVar");}
 	| relational_expression '<' shift_expression {
 		symbol *tempe = new symbol("tempVar");
@@ -616,7 +624,7 @@ relational_expression
 			$$ = new expr();
 			$$->setisbool(1);
 			symbol* tempe = new symbol("tempVar");
-			string debug  = getDebugString("532");
+			string debug  = getDebugString("619");
  			//cout<<debug<<endl; 
 			$$->settrueList(makeList (nextinstr())); 	// update the truleist an falseList of the expressions with the address of the nextinstr()
 			$$->setfalseList(makeList (nextinstr()+1));
@@ -632,7 +640,7 @@ relational_expression
 			$$->setisbool(1);
 			symbol* tempe = new symbol("tempVar");
 			tempe->getname() = "temp"; 
-			string debug  = getDebugString("548");
+			string debug  = getDebugString("635");
  					//cout<<debug<<endl;
 			$$->settrueList(makeList (nextinstr())); 		// update the truleist an falseList of the expressions with the address of the nextinstr()
 			$$->falseList = makeList (nextinstr()+1);
@@ -675,6 +683,7 @@ relational_expression
 		else cout << "Type Error"<< endl;
 	}
 	;
+
 
 equality_expression
 	: relational_expression {$$ = $1;}
@@ -775,41 +784,41 @@ inclusive_or_expression
 
 logical_and_expression
 	: inclusive_or_expression {$$ = $1;}
-	| logical_and_expression N AND_OP M inclusive_or_expression {
-		convertToBoolean($5); 		// convert inclusive_or_expression to boolean expression for AND_OP
+	| logical_and_expression  AND_OP M inclusive_or_expression {
+		convertToBoolean($4); 		// convert inclusive_or_expression to boolean expression for AND_OP
 		symbol* temp = new symbol("tempVar");
 			temp->name = "temp";
 		// N to convert $1 to bool
-		backpatch($2->getnextList(), nextinstr()); 	// backpatching N with nextinstr()
+		//>>>>>>>>>>>>>>>>>>>>>backpatch($2->getnextList(), nextinstr()); 	// backpatching N with nextinstr()
 		convertToBoolean($1);
 		$$ = new expr();	// declaring a boolean expression 
 		$$->setisbool(1);	// as it is a boolean expr setting is bool to true
-		backpatch($1->gettrueList(), $4);
+		backpatch($1->gettrueList(), $3);
 		string debug  = getDebugString("724");
  					//cout<<debug<<endl;
-		$$->settrueList($5->gettrueList());		// updating the truelist and falselist with the instr of the RHS expressions rule 
-		$$->setfalseList(merge ($1->falseList, $5->falseList)); }
+		$$->settrueList($4->gettrueList());		// updating the truelist and falselist with the instr of the RHS expressions rule 
+		$$->setfalseList(merge ($1->falseList, $4->falseList)); }
 	;
 
 logical_or_expression
 	: logical_and_expression {$$ = $1;}
-	| logical_or_expression N OR_OP M logical_and_expression {
-		convertToBoolean($5);
+	| logical_or_expression  OR_OP M logical_and_expression {
+		convertToBoolean($4);
 		symbol* temp = new symbol("tempVar");
 			temp->getname() = "temp";
 		// N to convert $1 to bool
-		backpatch($2->getnextList(), nextinstr());// backpatching N with nextinstr()
+		//backpatch($2->getnextList(), nextinstr());// backpatching N with nextinstr()
 		convertToBoolean($1);
-
+		backpatch($1->falseList,$3);
 		$$ = new expr();
 		$$->setisbool(1);
 		string debug  = getDebugString("742","logical Or ");
  					//cout<<debug<<endl;
-		backpatch ($$->falseList, $4);
-		$$->settrueList(merge ($1->trueList, $5->trueList));// updating the truelist and falselist with the instr of the RHS expressions rule 
+		//backpatch ($$->falseList, $3);
+		$$->settrueList(merge ($1->trueList, $4->trueList));// updating the truelist and falselist with the instr of the RHS expressions rule 
 		symbol* tempvar = new symbol("tempVar");
 		tempvar->getname() = "temp";
-		$$->setfalseList($5->getfalseList());
+		$$->setfalseList($4->getfalseList());
 	}
 	;
 //grammar augmentations M & N explained above
@@ -823,19 +832,19 @@ N 	: %empty { 	// Non terminal to prevent fallthrough by emitting a goto
 		emit (GOTOOP,""); }
 
 conditional_expression
-	: logical_or_expression {$$ = $1;}
+	: logical_or_expression {$$ = $1;}//cout<<"834"<<endl;}
 	| logical_or_expression N '?' M expression N ':' M conditional_expression {
-		$$->symp = gentemp();
-		string debug  = getDebugString("742","conditional_expression");
- 					//cout<<debug<<endl;
+		$$->symp = gentemp(_INT);
+		string debug  = getDebugString("838","conditional_expression");
+ 					cout<<debug<<endl;
 		$$->symp->update($5->symp->type);
 		emit(EQUAL, $$->symp->getname(), $9->symp->getname());
 		vector<int> l = makeList(nextinstr()); 		// makelist with nextistr to use further 
 		emit (GOTOOP, "");
 		backpatch($6->getnextList(), nextinstr()); 	// backpatch the 2nd N with next instr()
 		emit(EQUAL, $$->symp->getname(), $5->symp->getname());
-		debug  = getDebugString("750",$$->symp->getname());
- 					//cout<<debug<<endl;
+		debug  = getDebugString("846",$$->symp->getname());
+ 					cout<<debug<<endl;
 		vector<int> m = makeList(nextinstr());
 		l = merge (l, m);
 		emit (GOTOOP, "");
@@ -848,12 +857,13 @@ conditional_expression
 		backpatch ($1->getfalseList(), $8);
 		debug_2  = getDebugString("764","done $1->false");
  					//cout<<debug_2<<endl;
-		backpatch (l, nextinstr());}
+		backpatch (l, nextinstr());
+		}
 	;
 
 assignment_expression
 	: conditional_expression { symbol *tempe = new symbol("tempVar");
-		$$ = $1;}
+		$$ = $1;cout<<"865"<<endl;}
 	| unary_expression assignment_operator assignment_expression {
 		symbol* tempe;
 		switch ($1->getcat()) {
@@ -882,6 +892,7 @@ assignment_expression
 				tempe = $1->symp; 
 				break;
 			default:
+				cout<<"893"<<endl;
 				$3->symp = conv($3->symp, $1->symp->type->cat);  
 				emit(EQUAL, $1->symp->getname(), $3->symp->getname()); tempe = $3->symp;
 				break; symbol* tempe = new symbol("tempVar");}
@@ -902,7 +913,7 @@ assignment_operator
 	;
 
 expression
-	: assignment_expression {$$ = $1; symbol* tempe = $1->symp;}
+	: assignment_expression {$$ = $1; }//symbol* tempe = $1->symp;}
 	| expression ',' assignment_expression{}
 	;
 
@@ -1179,34 +1190,35 @@ expression_statement
 	;
 
 selection_statement
-	: IF '(' expression N ')' M statement N {
-		backpatch ($8->getnextList(), nextinstr());
+	: IF '(' expression ')' M statement N {
+		backpatch ($7->getnextList(), nextinstr());
 		convertToBoolean($3); //// convert expression to boolean expressions for the condition check of the if statement	
 		$$ = new statement();
-		backpatch ($3->gettrueList(), $6); 	// backpatch instr 
+		backpatch ($3->gettrueList(), $5); 	// backpatch instr 
+		backpatch ($3->getfalseList(), $7->nextList[0]); 	// backpatch instr 
 		string debug  = getDebugString("1100","in if stat");
  					//cout<<debug<<endl;
 		//cout<<tempString<<endl; 		//forDebug
-		vector<int> temp = merge ($3->falseList, $7->nextList);
+		vector<int> temp = merge ($3->falseList, $6->nextList);
 		symbol* tempe = new symbol("tempVar"); 
-		$$->setnextList((merge ($8->nextList, temp)));
+		$$->setnextList((merge ($7->nextList, temp)));
 		
 	}
-	| IF '(' expression N ')' M statement N ELSE M statement {
-		backpatch ($8->getnextList(), nextinstr()); // backpatch the nextinstr() in the nextlist of N 
+	| IF '(' expression  ')' M statement N ELSE M statement {
+		backpatch ($7->getnextList(), nextinstr()); // backpatch the nextinstr() in the nextlist of N 
 		convertToBoolean($3); //// convert expression to boolean expressions for the condition check of the if statement
 		$$ = new statement();
 		symbol* tempe = new symbol("tempVar");
 		string debug  = getDebugString("1113","if n else statement");
  					//cout<<debug<<endl;
-		backpatch ($3->gettrueList(), $6);
+		backpatch ($3->gettrueList(), $5);
 		string tempString = "in if else stat";
 		//cout<<tempString<<endl;			//forDebug
-		backpatch ($3->falseList, $10);
-		vector<int> temp = merge ($7->nextList, $8->nextList);
+		backpatch ($3->falseList, $9);
+		vector<int> temp = merge ($6->nextList, $7->nextList);
 		debug  = getDebugString("1120");
  					//cout<<debug<<endl;
-		$$->setnextList(merge (temp, $11->nextList));
+		$$->setnextList(merge (temp, $10->nextList));
 	}
 	| SWITCH '(' expression ')' statement /* Skipped */{ 
 	symbol* tempe = new symbol("tempVar");
@@ -1223,6 +1235,7 @@ iteration_statement
 		string debug  = getDebugString("1136","while state");
  					//cout<<debug<<endl;
 		backpatch($4->gettrueList(), $6);
+		backpatch($4->falseList,nextinstr()+1);
 		symbol* tempe = new symbol("tempVar");
 			tempe->name = "temp"; 
 		debug  = getDebugString("1141","while state");
@@ -1240,7 +1253,7 @@ iteration_statement
 		// M2 to go to check expression if statement is complete
 		backpatch ($7->gettrueList(), $2);  // backpatch instr $2 
 		backpatch ($3->getnextList(), $4);
-		string debug  = getDebugString("1156","in DO while state");
+		string debug  = getDebugString("1251","in DO while state");
  					//cout<<debug<<endl;
 		// Some bug in the next statement
 		$$->setnextList($7->getfalseList()); // set the nextList of $$
@@ -1252,18 +1265,21 @@ iteration_statement
 		convertToBoolean($5);	// convert expression_statement(2nd one) to boolean expressions for the condition check of the loop
 		backpatch ($5->gettrueList(), $7); //backpatch inst $7 to the truelist
 		backpatch ($8->getnextList(), $4);
-		string debug  = getDebugString("1168","FOR 2 PARA");
+		backpatch($5->falseList,nextinstr()+1);
+		string debug  = getDebugString("1263","FOR 2 PARA");
  					//cout<<debug<<endl; 
 		emit (GOTOOP, tostr($4));
 		$$->setnextList($5->getfalseList());
 	}
 	| FOR '(' expression_statement M expression_statement M expression N ')' M statement {
+		//backpatch ($12->getnextList(), nextinstr()+1); // b
 		$$ = new statement();
 		convertToBoolean($5);	// convert expression_statement(2nd one) to boolean expressions for the condition check of the loop
 		symbol* tempe = new symbol("tempVar");
 			tempe->name = "temp"; 
 		backpatch ($5->gettrueList(), $10);
 		backpatch ($8->getnextList(), $4);
+		backpatch($5->falseList,nextinstr()+1);
 		string debug  = getDebugString("1180","FOR 3 PARAM");
  					//cout<<debug<<endl;
 		backpatch ($11->getnextList(), $6);
@@ -1282,7 +1298,7 @@ jump_statement  // the jump statement and its corresponding semantic actions
 	}
 	| RETURN expression ';'{
 		$$ = new statement();
-		string debug  = getDebugString("1155","return expression");
+		string debug  = getDebugString("1298","return expression");
  					//cout<<debug<<endl;
 			emit(_RETURN,$2->symp->getname());
 	}
